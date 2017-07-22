@@ -104,9 +104,9 @@ class BaseTest(unittest.TestCase):
         assert r.status_code == code
 
     def get_recent_logs(self):
-        return str(subprocess.check_output((
+        return subprocess.check_output((
             'cf', 'logs', self.app_name, '--recent',
-        )), 'utf-8')
+        ))
 
     def assert_string_in_recent_logs(self, app_name, substring):
         output = subprocess.check_output(('cf', 'logs', app_name, '--recent'))
