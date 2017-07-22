@@ -14,7 +14,7 @@ def _salt():
 
 def gen_htpasswd(users_passwords, file_name_suffix=''):
     with open('nginx/.htpasswd' + file_name_suffix, 'w') as fh:
-        for user, password in users_passwords.items():
+        for user, password in list(users_passwords.items()):
             if not password:
                 fh.write("\n")
             else:
@@ -47,7 +47,7 @@ def get_path_config():
         restrictions['/'] = {}
 
     index = 0
-    for path, config in restrictions.iteritems():
+    for path, config in list(restrictions.items()):
         if path in ['/_mxadmin/', '/client-cert-check-internal']:
             raise Exception(
                 'Can not override access restrictions on system path %s' % path
@@ -102,4 +102,4 @@ location %s {
     return '\n    '.join(result.split('\n'))
 
 if __name__ == '__main__':
-    print get_path_config()
+    print((get_path_config()))

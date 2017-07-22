@@ -54,7 +54,7 @@ def format_dict_table(rows, column_names=None, max_column_width=None,
             column_list = column_names
         else:
             try:
-                column_list = rows[0].keys()
+                column_list = list(rows[0].keys())
             except:
                 column_list = None
         if column_list:
@@ -89,7 +89,7 @@ def format_dict_table(rows, column_names=None, max_column_width=None,
                 trunc_rows = []
                 for row in rows:
                     new_row = {}
-                    for k in row.keys():
+                    for k in list(row.keys()):
                         new_row[k[:max_column_width]] = (
                             str(row[k])[:max_column_width]
                         )
@@ -116,7 +116,7 @@ def format_dict_table(rows, column_names=None, max_column_width=None,
                 display.append(full_line)
             display.append(
                 left_table_edge_rule +
-                (row_template % dict(zip(column_list, column_list))) +
+                (row_template % dict(list(zip(column_list, column_list)))) +
                 right_table_edge_rule
             )
             if border_style > 0:

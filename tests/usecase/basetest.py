@@ -32,7 +32,7 @@ class BaseTest(unittest.TestCase):
         try:
             self.cmd(('cf', 'start', self.app_name))
         except subprocess.CalledProcessError as e:
-            print(self.get_recent_logs())
+            print((self.get_recent_logs()))
             raise e
 
     def setUpCF(self, package_name, env_vars=None):
@@ -69,7 +69,7 @@ class BaseTest(unittest.TestCase):
                 ),
             ), stderr=subprocess.PIPE)
         except subprocess.CalledProcessError as e:
-            print(e.output)
+            print((e.output))
             raise
 
         self.cmd((
@@ -104,7 +104,7 @@ class BaseTest(unittest.TestCase):
         assert r.status_code == code
 
     def get_recent_logs(self):
-        return unicode(subprocess.check_output((
+        return str(subprocess.check_output((
             'cf', 'logs', self.app_name, '--recent',
         )), 'utf-8')
 

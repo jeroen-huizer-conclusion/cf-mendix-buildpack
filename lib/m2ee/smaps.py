@@ -174,7 +174,7 @@ def _get_rss_by_category(smaps):
     result = {}
     for category in categories:
         result[category] = sum([smap.rss for smap in
-                                filter(lambda x: x.category == category, smaps)])
+                                [x for x in smaps if x.category == category]])
     return result
 
 
@@ -184,9 +184,9 @@ if __name__ == "__main__":
     smaps = _educated_guess_category(smaps, debug=True)
     totals = _get_rss_by_category(smaps)
 
-    print('Native code: %s kB' % totals[CATEGORY_CODE])
-    print('Native heap and memory arenas: %s kB' % totals[CATEGORY_NATIVE_HEAP_ARENA])
-    print('JVM Heap: %s kB' % totals[CATEGORY_JVM_HEAP])
-    print('Thread stacks: %s kB' % totals[CATEGORY_THREAD_STACK])
-    print('JAR files: %s kB' % totals[CATEGORY_JAR])
-    print('Other: %s kB' % totals[CATEGORY_OTHER])
+    print(('Native code: %s kB' % totals[CATEGORY_CODE]))
+    print(('Native heap and memory arenas: %s kB' % totals[CATEGORY_NATIVE_HEAP_ARENA]))
+    print(('JVM Heap: %s kB' % totals[CATEGORY_JVM_HEAP]))
+    print(('Thread stacks: %s kB' % totals[CATEGORY_THREAD_STACK]))
+    print(('JAR files: %s kB' % totals[CATEGORY_JAR]))
+    print(('Other: %s kB' % totals[CATEGORY_OTHER]))

@@ -9,7 +9,7 @@ import os
 import string
 
 from m2ee.log import logger
-import smaps
+from . import smaps
 
 # Use json if available. If not (python 2.5) we need to import the simplejson
 # module instead, which has to be available.
@@ -18,7 +18,7 @@ try:
 except ImportError:
     try:
         import simplejson as json
-    except ImportError, ie:
+    except ImportError as ie:
         logger.critical("Failed to import json as well as simplejson. If "
                         "using python 2.5, you need to provide the simplejson "
                         "module in your python library path.")
@@ -152,7 +152,7 @@ def get_stats(action, client, config):
     try:
         stats, java_version = get_stats_from_runtime(client, config)
         write_last_known_good_stats_cache(stats, config_cache)
-    except Exception, e:
+    except Exception as e:
         if action == 'config':
             logger.debug("Error fetching runtime/server statistics: %s", e)
             stats = read_stats_from_last_known_good_stats_cache(config_cache)
@@ -219,7 +219,7 @@ def write_last_known_good_stats_cache(stats, config_cache):
     logger.debug("Writing munin cache to %s" % config_cache)
     try:
         file(config_cache, 'w+').write(json.dumps(stats))
-    except Exception, e:
+    except Exception as e:
         logger.error("Error writing munin config cache to %s: %s",
                      (config_cache, e))
 
@@ -231,68 +231,68 @@ def read_stats_from_last_known_good_stats_cache(config_cache):
         fd = open(config_cache)
         stats = json.loads(fd.read())
         fd.close()
-    except IOError, e:
+    except IOError as e:
         logger.error("Error reading munin cache file %s: %s" %
                      (config_cache, e))
-    except ValueError, e:
+    except ValueError as e:
         logger.error("Error parsing munin cache file %s: %s" %
                      (config_cache, e))
     return stats
 
 
 def print_requests_config(name, stats):
-    print("multigraph mxruntime_requests_%s" % name)
+    print(("multigraph mxruntime_requests_%s" % name))
     print("graph_args --base 1000 -l 0")
     print("graph_vlabel Requests per second")
-    print("graph_title %s - MxRuntime Requests" % name)
+    print(("graph_title %s - MxRuntime Requests" % name))
     print("graph_category Mendix")
     print("graph_info This graph shows the amount of requests this MxRuntime handles")
-    for sub in stats['requests'].iterkeys():
+    for sub in list(stats['requests'].keys()):
         substrip = '_' + string.strip(sub, '/').replace('-', '_')
         if sub != '':
             subname = sub
         else:
             subname = '/'
-        print("%s.label %s" % (substrip, subname))
-        print("%s.draw LINE1" % substrip)
-        print("%s.info amount of requests this MxRuntime handles on %s" % (substrip, subname))
-        print("%s.type DERIVE" % substrip)
-        print("%s.min 0" % substrip)
+        print(("%s.label %s" % (substrip, subname)))
+        print(("%s.draw LINE1" % substrip))
+        print(("%s.info amount of requests this MxRuntime handles on %s" % (substrip, subname)))
+        print(("%s.type DERIVE" % substrip))
+        print(("%s.min 0" % substrip))
     print("")
 
 
 def print_requests_values(name, stats):
-    print("multigraph mxruntime_requests_%s" % name)
-    for sub, count in stats['requests'].iteritems():
+    print(("multigraph mxruntime_requests_%s" % name))
+    for sub, count in list(stats['requests'].items()):
         substrip = '_' + string.strip(sub, '/').replace('-', '_')
-        print("%s.value %s" % (substrip, count))
+        print(("%s.value %s" % (substrip, count)))
     print("")
 
 
 def print_connectionbus_config(name, stats):
     if 'connectionbus' not in stats:
         return
-    print("multigraph mxruntime_connectionbus_%s" % name)
+    print(("multigraph mxruntime_connectionbus_%s" % name))
     print("graph_args --base 1000 -l 0")
     print("graph_vlabel Statements per second")
-    print("graph_title %s - Database Queries" % name)
+    print(("graph_title %s - Database Queries" % name))
     print("graph_category Mendix")
     print("graph_info This graph shows the amount of executed transactions and queries")
-    for s in stats['connectionbus'].iterkeys():
-        print("%s.label %ss" % (s, s))
-        print("%s.draw LINE1" % s)
-        print("%s.info amount of %ss" % (s, s))
-        print("%s.type DERIVE" % s)
-        print("%s.min 0" % s)
+    for s in list(stats['connectionbus'].keys()):
+        print(("%s.label %ss" % (s, s)))
+        print(("%s.draw LINE1" % s))
+        print(("%s.info amount of %ss" % (s, s)))
+        print(("%s.type DERIVE" % s))
+        print(("%s.min 0" % s))
     print("")
 
 
 def print_connectionbus_values(name, stats):
     if 'connectionbus' not in stats:
         return
-    print("multigraph mxruntime_connectionbus_%s" % name)
-    for s, count in stats['connectionbus'].iteritems():
-        print("%s.value %s" % (s, count))
+    print(("multigraph mxruntime_connectionbus_%s" % name))
+    for s, count in list(stats['connectionbus'].items()):
+        print(("%s.value %s" % (s, count)))
     print("")
 
 
@@ -316,10 +316,10 @@ def print_sessions_pre254_config(name, stats):
     named_user_sessions counts names as well as anonymous sessions
     !! you stil need to rename the rrd files in /var/lib/munin/ !!
     """
-    print("multigraph mxruntime_sessions_%s" % name)
+    print(("multigraph mxruntime_sessions_%s" % name))
     print("graph_args --base 1000 -l 0")
     print("graph_vlabel Concurrent user sessions")
-    print("graph_title %s - MxRuntime Users" % name)
+    print(("graph_title %s - MxRuntime Users" % name))
     print("graph_category Mendix")
     print("graph_info This graph shows the amount of concurrent user sessions")
     print("named_user_sessions.label concurrent user sessions")
@@ -329,16 +329,16 @@ def print_sessions_pre254_config(name, stats):
 
 
 def print_sessions_pre254_values(name, stats):
-    print("multigraph mxruntime_sessions_%s" % name)
-    print("named_user_sessions.value %s" % stats['sessions'])
+    print(("multigraph mxruntime_sessions_%s" % name))
+    print(("named_user_sessions.value %s" % stats['sessions']))
     print("")
 
 
 def print_sessions_since254_config(name, stats, graph_total_named_users):
-    print("multigraph mxruntime_sessions_%s" % name)
+    print(("multigraph mxruntime_sessions_%s" % name))
     print("graph_args --base 1000 -l 0")
     print("graph_vlabel Concurrent user sessions")
-    print("graph_title %s - MxRuntime Users" % name)
+    print(("graph_title %s - MxRuntime Users" % name))
     print("graph_category Mendix")
     print("graph_info This graph shows the amount of user accounts and sessions")
     if graph_total_named_users:
@@ -355,21 +355,21 @@ def print_sessions_since254_config(name, stats, graph_total_named_users):
 
 
 def print_sessions_since254_values(name, stats, graph_total_named_users):
-    print("multigraph mxruntime_sessions_%s" % name)
+    print(("multigraph mxruntime_sessions_%s" % name))
     if graph_total_named_users:
-        print("named_users.value %s" % stats['sessions']['named_users'])
-    print("named_user_sessions.value %s" %
-          stats['sessions']['named_user_sessions'])
-    print("anonymous_sessions.value %s" %
-          stats['sessions']['anonymous_sessions'])
+        print(("named_users.value %s" % stats['sessions']['named_users']))
+    print(("named_user_sessions.value %s" %
+          stats['sessions']['named_user_sessions']))
+    print(("anonymous_sessions.value %s" %
+          stats['sessions']['anonymous_sessions']))
     print("")
 
 
 def print_jvmheap_config(name, stats):
-    print("multigraph mxruntime_jvmheap_%s" % name)
+    print(("multigraph mxruntime_jvmheap_%s" % name))
     print("graph_args --base 1024 -l 0")
     print("graph_vlabel Bytes")
-    print("graph_title %s - JVM Heap Memory Usage" % name)
+    print(("graph_title %s - JVM Heap Memory Usage" % name))
     print("graph_category Mendix")
     print("graph_info This graph shows memory pool information on the Java JVM")
     print("tenured.label tenured generation")
@@ -396,23 +396,23 @@ def print_jvmheap_config(name, stats):
 
 
 def print_jvmheap_values(name, stats):
-    print("multigraph mxruntime_jvmheap_%s" % name)
+    print(("multigraph mxruntime_jvmheap_%s" % name))
     memory = stats['memory']
     for k in ['tenured', 'survivor', 'eden']:
-        print('%s.value %s' % (k, memory[k]))
+        print(('%s.value %s' % (k, memory[k])))
     free = (memory['max_heap'] - memory['used_heap'])
-    print("free.value %s" % free)
-    print("limit.value %s" % memory['max_heap'])
+    print(("free.value %s" % free))
+    print(("limit.value %s" % memory['max_heap']))
     print("")
 
 
 def print_threadpool_config(name, stats):
     if "threadpool" not in stats:
         return
-    print("multigraph m2eeserver_threadpool_%s" % name)
+    print(("multigraph m2eeserver_threadpool_%s" % name))
     print("graph_args --base 1000 -l 0")
     print("graph_vlabel Jetty Threadpool")
-    print("graph_title %s - Jetty Threadpool" % name)
+    print(("graph_title %s - Jetty Threadpool" % name))
     print("graph_category Mendix")
     print("graph_info This graph shows threadpool usage information on Jetty")
     print("min_threads.label min threads")
@@ -436,19 +436,19 @@ def print_threadpool_values(name, stats):
 
     threadpool = stats['threadpool']
 
-    print("multigraph m2eeserver_threadpool_%s" % name)
+    print(("multigraph m2eeserver_threadpool_%s" % name))
     for k in ['min_threads', 'max_threads', 'active_threads', 'threadpool_size']:
-        print('%s.value %s' % (k, threadpool[k]))
+        print(('%s.value %s' % (k, threadpool[k])))
     print("")
 
 
 def print_cache_config(name, stats):
     if "cache" not in stats:
         return
-    print("multigraph mxruntime_cache_%s" % name)
+    print(("multigraph mxruntime_cache_%s" % name))
     print("graph_args --base 1000 -l 0")
     print("graph_vlabel objects")
-    print("graph_title %s - Object Cache" % name)
+    print(("graph_title %s - Object Cache" % name))
     print("graph_category Mendix")
     print("graph_info This graph shows the total amount of objects in the runtime object cache")
     print("total.label Objects in cache")
@@ -460,18 +460,18 @@ def print_cache_config(name, stats):
 def print_cache_values(name, stats):
     if "cache" not in stats:
         return
-    print("multigraph mxruntime_cache_%s" % name)
-    print("total.value %s" % stats['cache']['total_count'])
+    print(("multigraph mxruntime_cache_%s" % name))
+    print(("total.value %s" % stats['cache']['total_count']))
     print("")
 
 
 def print_jvm_threads_config(name, stats):
     if "threads" not in stats:
         return
-    print("multigraph mxruntime_threads_%s" % name)
+    print(("multigraph mxruntime_threads_%s" % name))
     print("graph_args --base 1000 -l 0")
     print("graph_vlabel objects")
-    print("graph_title %s - JVM Threads" % name)
+    print(("graph_title %s - JVM Threads" % name))
     print("graph_category Mendix")
     print("graph_info This graph shows the total amount of threads in the JVM process")
     print("total.label threads")
@@ -483,18 +483,18 @@ def print_jvm_threads_config(name, stats):
 def print_jvm_threads_values(name, stats):
     if "threads" not in stats:
         return
-    print("multigraph mxruntime_threads_%s" % name)
-    print("total.value %s" % stats['threads'])
+    print(("multigraph mxruntime_threads_%s" % name))
+    print(("total.value %s" % stats['threads']))
     print("")
 
 
 def print_jvm_process_memory_config(name):
     if not smaps.has_smaps('self'):
         return
-    print("multigraph mxruntime_jvm_process_memory_%s" % name)
+    print(("multigraph mxruntime_jvm_process_memory_%s" % name))
     print("graph_args --base 1024 -l 0")
     print("graph_vlabel Bytes")
-    print("graph_title %s - JVM Process Memory Usage" % name)
+    print(("graph_title %s - JVM Process Memory Usage" % name))
     print("graph_category Mendix")
     print("graph_info This graph shows the total memory usage of the Java JVM process")
     print("nativecode.label native code")
@@ -543,12 +543,12 @@ def print_jvm_process_memory_values(name, stats, pid, client, java_version):
     if totals is None:
         return
     memory = stats['memory']
-    print("multigraph mxruntime_jvm_process_memory_%s" % name)
+    print(("multigraph mxruntime_jvm_process_memory_%s" % name))
 
     for k in ['tenured', 'survivor', 'eden', 'javaheap', 'permanent',
         'nativemem', 'stacks', 'total', 'jar', 'nativecode', 'code',
         'codecache']:
-        print('%s.value %s' % (k, memory[k]))
+        print(('%s.value %s' % (k, memory[k])))
     print("")
 
 

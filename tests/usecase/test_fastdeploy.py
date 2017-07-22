@@ -24,7 +24,7 @@ class TestCaseFastdeploy(basetest.BaseTest):
         })
 
         if r.status_code != 200:
-            print(self.get_recent_logs())
-            print(r.text)
+            print((self.get_recent_logs()))
+            print((r.text))
         assert r.status_code == 200
         assert "STARTED" in r.text

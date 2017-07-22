@@ -10,8 +10,8 @@ import cmd
 import datetime
 import sys
 
-from client import M2EEClient
-from profileutil import print_logs, print_log, sort_logs, to_csv, format_as_csv
+from .client import M2EEClient
+from .profileutil import print_logs, print_log, sort_logs, to_csv, format_as_csv
 
 
 class M2EEProfiler(cmd.Cmd):
@@ -58,7 +58,7 @@ class M2EEProfiler(cmd.Cmd):
         return True
 
     def do_EOF(self, args):
-        print
+        print()
         return True
 
     def emptyline(self):
@@ -86,8 +86,8 @@ class M2EEProfiler(cmd.Cmd):
         should_print_queries = len(arglist) == 1 or not arglist[1] == "-nodb"
 
         if not hasattr(self, 'logs_cache'):
-            print("haven't retrieved any logs yet, can't show you anything "
-                  "with id %s" % args)
+            print(("haven't retrieved any logs yet, can't show you anything "
+                  "with id %s" % args))
             return
 
         try:
@@ -97,7 +97,7 @@ class M2EEProfiler(cmd.Cmd):
                 raise ValueError
             print_log(sorted_logs, nr, should_print_queries)
         except ValueError:
-            print("must provide a number between 0 and %s" % len(sorted_logs))
+            print(("must provide a number between 0 and %s" % len(sorted_logs)))
 
     def get_minimum_duration(self, args):
         minimum_duration_to_log = None
@@ -109,8 +109,8 @@ class M2EEProfiler(cmd.Cmd):
 
         while minimum_duration_to_log is None:
             try:
-                answer = raw_input("Minimum duration to log? Defaults to "
-                                   "1000(ms) ")
+                answer = eval(input("Minimum duration to log? Defaults to "
+                                   "1000(ms) "))
                 if answer == "":
                     minimum_duration_to_log = 1000
                 else:
@@ -130,7 +130,7 @@ class M2EEProfiler(cmd.Cmd):
 
         while flush_interval is None:
             try:
-                answer = raw_input("Flush interval? Defaults to 30 min ")
+                answer = eval(input("Flush interval? Defaults to 30 min "))
                 if answer == "":
                     flush_interval = 30
                 else:
@@ -142,7 +142,7 @@ class M2EEProfiler(cmd.Cmd):
 
     def print_response(self, json):
         if "message" in json:
-            print(json["message"])
+            print((json["message"]))
         else:
             print(json)
 
@@ -152,7 +152,7 @@ if __name__ == '__main__':
     profiler = M2EEProfiler(client)
 
     if not client.ping():
-        print("can't reach (or ping) server '%s', exiting..." % server)
+        print(("can't reach (or ping) server '%s', exiting..." % server))
         sys.exit()
 
     if len(sys.argv) > 1 and sys.argv[1] == '-csv':

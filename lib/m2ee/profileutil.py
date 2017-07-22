@@ -6,8 +6,8 @@
 
 import datetime
 
-from log import logger
-from profileutildp import format_dict_table
+from .log import logger
+from .profileutildp import format_dict_table
 
 # Use json if available. If not (python 2.5) we need to import the simplejson
 # module instead, which has to be available.
@@ -16,7 +16,7 @@ try:
 except ImportError:
     try:
         import simplejson as json
-    except ImportError, ie:
+    except ImportError as ie:
         logger.critical("Failed to import json as well as simplejson. If "
                         "using python 2.5, you need to provide the simplejson "
                         "module in your python library path.")
@@ -85,10 +85,10 @@ Original request: %s \n\n \
 
 
 def sort_logs(logs):
-    logs = map(Log, logs.keys(), logs.values())
+    logs = list(map(Log, list(logs.keys()), list(logs.values())))
     logs.sort(lambda x, y: y.duration - x.duration)
 
-    return map(lambda x: x.__dict__, logs)  # back to dict for printing method
+    return [x.__dict__ for x in logs]  # back to dict for printing method
 
 
 def print_logs(logs):
@@ -108,22 +108,22 @@ def print_logs(logs):
 
     column_names_in_order = ['', 'action', 'duration', 'start_time_formatted',
                              'end_time_formatted', 'username', 'still_running']
-    print(format_dict_table(ordered_logs[:50],
+    print((format_dict_table(ordered_logs[:50],
                             max_column_width=width / columns + 200,
-                            column_names=column_names_in_order))
+                            column_names=column_names_in_order)))
 
 
 def print_log(logs, request_nr, should_print_queries=True):
     if len(logs) < request_nr:
-        print("Can't find request matching id %s" % request_nr)
+        print(("Can't find request matching id %s" % request_nr))
         print("it might have already been flushed to the logs...")
         return
     log = Log(logs[request_nr]['request_id'], logs[request_nr])
-    print(log.pretty_format(should_print_queries))
+    print((log.pretty_format(should_print_queries)))
 
 
 def to_csv(logs):
-    print(format_as_csv(logs))
+    print((format_as_csv(logs)))
 
 
 def format_as_csv(logs):
@@ -131,4 +131,4 @@ def format_as_csv(logs):
         return "no logs found"
 
     ordered_logs = sort_logs(logs)
-    return "\n".join(["\t".join(map(str, x.values())) for x in ordered_logs])
+    return "\n".join(["\t".join(map(str, list(x.values()))) for x in ordered_logs])
