@@ -17,7 +17,7 @@ class BaseTest(unittest.TestCase):
     def __init__(self, *args, **kwargs):
         super(BaseTest, self).__init__(*args, **kwargs)
         if not os.environ.get("TRAVIS_BRANCH"):
-            current_branch = subprocess.check_output("git rev-parse --symbolic-full-name --abbrev-ref HEAD", shell=True)
+            current_branch = subprocess.check_output("git rev-parse --symbolic-full-name --abbrev-ref HEAD", shell=True).decode('utf-8')
         else:
             current_branch = "master"
         self.cf_domain = os.environ.get("CF_DOMAIN")
@@ -69,14 +69,14 @@ class BaseTest(unittest.TestCase):
                 ),
             ), stderr=subprocess.PIPE)
         except subprocess.CalledProcessError as e:
-            print((e.output))
+            print(e.output.decode('utf-8'))
             raise
 
         self.cmd((
             './create-app-services.sh', self.app_name
         ))
 
-        app_guid = subprocess.check_output(('cf', 'app', self.app_name, '--guid')).strip()
+        app_guid = subprocess.check_output(('cf', 'app', self.app_name, '--guid')).decode('utf-8').strip()
 
         environment = {
             'ADMIN_PASSWORD': self.mx_password,
@@ -106,10 +106,10 @@ class BaseTest(unittest.TestCase):
     def get_recent_logs(self):
         return subprocess.check_output((
             'cf', 'logs', self.app_name, '--recent',
-        ))
+        )).decode('utf-8')
 
     def assert_string_in_recent_logs(self, app_name, substring):
-        output = subprocess.check_output(('cf', 'logs', app_name, '--recent'))
+        output = subprocess.check_output(('cf', 'logs', app_name, '--recent')).decode('utf-8')
         if output.find(substring) > 0:
             pass
         else:
