@@ -267,20 +267,29 @@ def _checkout_from_git_rootfs(directory, mx_version):
 
     # checkout the runtime version
     try:
-        subprocess.check_call(
+        subprocess.check_output(
             ('git', 'checkout', str(mx_version), '-f'),
             cwd=mendix_runtimes_path, env=env,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.PIPE,
         )
         return
     except:
         try:
             subprocess.check_call(
-                ('git', 'fetch', '--tags'),
-                cwd=mendix_runtimes_path, env=env
+                (
+                    'git', 'fetch', 'origin',
+                    'refs/tags/{0}:refs/tags/{0}'.format(str(mx_version)),
+                ),
+                cwd=mendix_runtimes_path, env=env,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
             )
             subprocess.check_call(
                 ('git', 'checkout', str(mx_version), '-f'),
-                cwd=mendix_runtimes_path, env=env
+                cwd=mendix_runtimes_path, env=env,
+                stdout=subprocess.PIPE,
+                stderr=subprocess.PIPE,
             )
             logging.debug('found mx version after updating runtimes.git')
             return
