@@ -35,14 +35,14 @@ class BaseTest(unittest.TestCase):
             print((self.get_recent_logs()))
             raise e
 
-    def setUpCF(self, package_name, env_vars=None):
+    def setUpCF(self, package_name, env_vars=None, instances=1):
         try:
-            self._setUpCF(package_name, env_vars=env_vars)
+            self._setUpCF(package_name, env_vars=env_vars, instances=instances)
         except:
             self.tearDown()
             raise
 
-    def _setUpCF(self, package_name, env_vars=None):
+    def _setUpCF(self, package_name, env_vars=None, instances=1):
         self.package_name = package_name
         self.package_url = os.environ.get(
             "PACKAGE_URL",
@@ -63,6 +63,7 @@ class BaseTest(unittest.TestCase):
                 '--no-start',
                 '-k', '3G',
                 '-m', '2G',
+                '-i', str(instances),
                 '-b', (
                     'https://github.com/mendix/cf-mendix-buildpack.git#%s'
                     % self.branch_name
