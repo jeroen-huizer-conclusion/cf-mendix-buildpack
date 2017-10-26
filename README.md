@@ -2,7 +2,13 @@ Run Mendix in Cloud Foundry
 =====
 [![Build Status](https://travis-ci.org/mendix/cf-mendix-buildpack.svg?branch=master)](https://travis-ci.org/mendix/cf-mendix-buildpack)
 
-There are specific guides for deploying Mendix apps to the [Pivotal](https://docs.mendix.com/howto/cloud-foundry/deploy-a-mendix-app-to-pivotal) and [IBM Bluemix](https://docs.mendix.com/howto/cloud-foundry/deploy-a-mendix-app-to-ibm-bluemix) Cloud Foundry platforms on our [documentation page](https://docs.mendix.com/howto/cloud-foundry/). This buildpack readme documents the more low-level details and CLI instructions.
+The Mendix Buildpack for Cloud Foundry has two main phases:
+* compile: Fetch the JRE, Mendix Runtime, and nginx and bundle these together with the application model into a `droplet`. This is handled by `bin/compile`.
+* run: Start the various processes and run the application. `python start.py` is for orchestration, the JVM is for executing the Mendix Model, and nginx is used as reverse proxy including handling access restrictions.
+
+The compile phase accepts archives in `.mda` format (Mendix Deployment Archive). There is experimental support for `.mpk` archives (Mendix Project Package). If an `.mpk` file is pushed, `mxbuild` is executed using Mono in the compile phase as well, the run phase stays the same.
+
+There are specific guides for deploying Mendix apps to the [Pivotal](https://docs.mendix.com/deployment/cloud-foundry/deploy-a-mendix-app-to-pivotal) and [IBM Bluemix](https://docs.mendix.com/deployment/cloud-foundry/deploy-a-mendix-app-to-ibm-bluemix) Cloud Foundry platforms on our [documentation page](https://docs.mendix.com/deployment/cloud-foundry). This buildpack readme documents the more low-level details and CLI instructions.
 
 
 Deploying using the CLI
@@ -169,7 +175,13 @@ If you are running Cloud Foundry without a connection to the Internet, you shoul
 
 The preferred way to set up this on-premises web server is as a transparant proxy to `https://cdn.mendix.com/`. This prevents manual work by system administrators every time a new Mendix version is released.
 
-Alternatively you can make the required mendix runtime files `mendix-VERSION.tar.gz` available under `BLOBSTORE/runtime/`. You should also make the Java version available on `/mx-buildpack/oracle-java8u45-jdk_8u45_amd64.deb` available under `BLOBSTORE/mx-buildpack/`. The original files can be downloaded from `https://cdn.mendix.com/`.
+Alternatively you can make the required mendix runtime files `mendix-VERSION.tar.gz` available under `BLOBSTORE/runtime/`. The original files can be downloaded from `https://cdn.mendix.com/`. You should also make the Java version available on:
+* `BLOBSTORE/mx-buildpack/jre-8-linux-x64.tar.gz`
+* `BLOBSTORE/mx-buildpack/jdk-8-linux-x64.tar.gz`
+
+And for [Mendix < 6.6](https://docs.mendix.com/releasenotes/desktop-modeler/6.6#fixes):
+* `BLOBSTORE/mx-buildpack/jre-8u51-linux-x64.tar.gz`
+* `BLOBSTORE/mx-buildpack/jdk-8u51-linux-x64.tar.gz`
 
 
 ### Certificate Management
