@@ -4,9 +4,9 @@ dist: trusty
 language: python
 
 python:
-  - "3.5"
+  - "3.6"
 
-install: 'pip install -r tests/requirements.txt'
+install: 'pip3 install -r tests/requirements.txt'
 
 before_script:
   - wget --quiet "https://cli.run.pivotal.io/stable?release=debian64&version=6.30.0&source=github-rel" -O cli.deb
@@ -15,7 +15,7 @@ before_script:
   - sudo update-ca-certificates
 
 script:
-  - cd tests && bash run.sh
+  - make test
 
 notifications:
   email: false

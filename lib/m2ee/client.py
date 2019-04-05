@@ -7,7 +7,7 @@
 
 from base64 import b64encode
 import socket
-from log import logger
+from .log import logger
 
 try:
     import httplib2
@@ -23,7 +23,7 @@ try:
 except ImportError:
     try:
         import simplejson as json
-    except ImportError, ie:
+    except ImportError as ie:
         logger.critical("Failed to import json as well as simplejson. If "
                         "using python 2.5, you need to provide the simplejson "
                         "module in your python library path.")
@@ -36,7 +36,7 @@ class M2EEClient:
         self._url = url
         self._headers = {
             'Content-Type': 'application/json',
-            'X-M2EE-Authentication': b64encode(password)
+            'X-M2EE-Authentication': b64encode(password.encode('utf-8')).decode('ascii'),
         }
 
     def request(self, action, params=None, timeout=None):
@@ -44,13 +44,13 @@ class M2EEClient:
         if params:
             body["params"] = params
         body = json.dumps(body)
-        h = httplib2.Http(timeout=timeout)  # httplib does not like os.fork
+        h = httplib2.Http(timeout=timeout, proxy_info=None)  # httplib does not like os.fork
         logger.trace("M2EE request body: %s" % body)
         (response_headers, response_body) = h.request(self._url, "POST", body,
                                                       headers=self._headers)
         if (response_headers['status'] == "200"):
             logger.trace("M2EE response: %s" % response_body)
-            return M2EEResponse(action, json.loads(response_body))
+            return M2EEResponse(action, json.loads(response_body.decode('utf-8')))
         else:
             logger.error("non-200 http status code: %s %s" %
                          (response_headers, response_body))
@@ -60,13 +60,13 @@ class M2EEClient:
             response = self.request("echo", {"echo": "ping"}, timeout)
             if response.get_result() == 0:
                 return True
-        except AttributeError, e:
+        except AttributeError as e:
             # httplib 0.6 throws AttributeError: 'NoneType' object has no
             # attribute 'makefile' in case of a connection refused :-|
             logger.trace("Got %s: %s" % (type(e), e))
-        except (socket.error, socket.timeout), e:
+        except (socket.error, socket.timeout) as e:
             logger.trace("Got %s: %s" % (type(e), e))
-        except Exception, e:
+        except Exception as e:
             logger.error("Got %s: %s" % (type(e), e))
             import traceback
             logger.error(traceback.format_exc())
@@ -76,7 +76,7 @@ class M2EEClient:
         myparams = {"echo": "ping"}
         if params is not None:
             myparams.update(params)
-        return self.request("echo", myparams)
+        return self.request("echo", myparams, timeout=10)
 
     def get_critical_log_messages(self):
         echo_feedback = self.echo().get_feedback()
@@ -118,13 +118,13 @@ class M2EEClient:
         return self.request("close_stdio")
 
     def runtime_status(self):
-        return self.request("runtime_status")
+        return self.request("runtime_status", timeout=10)
 
     def runtime_statistics(self):
-        return self.request("runtime_statistics")
+        return self.request("runtime_statistics", timeout=10)
 
     def server_statistics(self):
-        return self.request("server_statistics")
+        return self.request("server_statistics", timeout=10)
 
     def create_log_subscriber(self, params):
         return self.request("create_log_subscriber", params)

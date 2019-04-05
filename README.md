@@ -24,27 +24,27 @@ Install the Cloud Foundry command line executable. You can find this on the [rel
 
 We push an mda (Mendix Deployment Archive) that was built by the Mendix Business Modeler to Cloud Foundry.
 
-    cf push <YOUR_APP> -b https://github.com/mendix/cf-mendix-buildpack -p <YOUR_MDA>.mda -t 300
+    cf push <YOUR_APP> -b https://github.com/mendix/cf-mendix-buildpack -p <YOUR_MDA>.mda -t 180
 
 We can also push a project directory. This will move the build process (using mxbuild) to Cloud Foundry:
 
-    cd <PROJECT DIR>; cf push -b https://github.com/mendix/cf-mendix-buildpack -t 300
+    cd <PROJECT DIR>; cf push -b https://github.com/mendix/cf-mendix-buildpack -t 180
 
-Note that you might need to increase the startup timeout to prevent the database from being partially synchronized. This can be done either by specifying the `-t 300` parameter like above, or by using the `CF_STARTUP_TIMEOUT` environment variable (in minutes) from the command line.
+Note that you might need to increase the startup timeout to prevent the database from being partially synchronized. This can be done either by specifying the `-t 180` parameter like above, or by using the `CF_STARTUP_TIMEOUT` environment variable (in minutes) from the command line.
 
 Also note that building the project in Cloud Foundry takes more time and requires enough memory in the compile step.
 
 
 ### Configuring admin password
 
-The first push generates a new app. In order to login to your application as admin you can set the password using the `ADMIN_PASSWORD` environment variable. Keep in mind that the admin password should comply with the policy you have set in the Modeler.
+The first push generates a new app. In order to login to your application as admin you can set the password using the `ADMIN_PASSWORD` environment variable. Keep in mind that the admin password should comply with the policy you have set in the Mendix Modeler. For security reasons it is recommended to set this environment variable once to create the admin user, then remove the environment variable and restart the app. Finally log in to the app and change the password via the web interface. Similarly, the setting can be used to reset the password of an administrator.
 
     cf set-env <YOUR_APP> ADMIN_PASSWORD "<YOURSECRETPASSWORD>"
 
 
 ### Connecting a Database
 
-You also need to connect a PostgreSQL or MySQL instance which allows at least 5 connections to the database. Find out which services are available in your Cloud Foundry instance like this.
+You also need to connect a PostgreSQL, MySQL or any other Mendix supported database instance which allows at least 5 connections to the database. Find out which services are available in your Cloud Foundry foundation with the `marketplace` command.
 
     cf marketplace
 
@@ -54,13 +54,21 @@ In our trial we found the service `elephantsql` which offered the free `turtle` 
 
     cf bind-service <YOUR_APP> <SERVICE_NAME>
 
-Note that not all database service set a `DATABASE_URL` value. If this is not done automatically you need to set this variable manually using the details included in the service, as the buildpack will look for this variable for the database connection string.
+Note that not all databases are automatically picked up by the buildpack. If `cf push` returns an error like `Could not parse database credentials`, you need to set the `DATABASE_URL` variable manually using the details included in the service.
 
 Now we need to push the application once more.
 
     cf push <YOUR_APP> -b https://github.com/mendix/cf-mendix-buildpack -p <YOUR_MDA>.mda
 
-You can now log in to your application with the specified password.
+You can now log in to your application with the configured admin password.
+
+For PostgreSQL we support setting additional parameters in the connection uri retrieved from the VCAP. To set additional JDBC parameters set the `DATABASE_CONNECTION_PARAMS` environment variable as JSON key-value string.
+
+```
+cf set-env <YOUR_APP> DATABASE_CONNECTION_PARAMS '{"tcpKeepAlive": "true", "connectionTimeout": 30, "loginTimeout": 15}'
+```
+
+Note: if you set `DATABASE_URL` provide it as JDBC connection string (prefixed with `jdbc:` and including parameters, `DATABASE_CONNECTION_PARAMS` is not needed then.
 
 
 ### Configuring Constants
@@ -85,7 +93,7 @@ When scaling to multiple instances, the scheduled events that are enabled via th
 
 ### Configuring External Filestore
 
-Mendix supports multiple external file stores: AWS S3 compatible file stores (5.15+), Azure Storage (6.6+) and Swift, used in Bluemix Object Storage (6.7+). All of these can be configured manually via [Custom Runtime Settings](#configuring-custom-runtime-settings), but S3, Azure Storage and Swift (Bluemix Object Storage) can be configured in easier ways:
+Mendix supports multiple external file stores: AWS S3 compatible file stores, Azure Storage and Swift, used in Bluemix Object Storage. All of these can be configured manually via [Custom Runtime Settings](#configuring-custom-runtime-settings), but S3, Azure Storage and Swift (Bluemix Object Storage) can be configured in easier ways:
 
 #### Swift (Bluemix Object Storage) Settings
 
@@ -97,7 +105,7 @@ When deploying Mendix 6.7 or higher to CF on Azure with the Azure Service Broker
 
 #### S3 Settings
 
-Mendix 5.15 and up can use external file stores with an S3 api. Use the following environment variables to enable this.
+Mendix can use external file stores with an S3 compatible api. Use the following environment variables to enable this.
 
 * `S3_ACCESS_KEY_ID`: credentials access key
 * `S3_SECRET_ACCESS_KEY`: credentials secret
@@ -108,13 +116,12 @@ The following environment variables are optional:
 * `S3_KEY_SUFFIX`: if your bucket is multi-tenant you can append a string after each object name, you can restrict IAM users to objects with this suffix.
 * `S3_ENDPOINT`: for S3 itself this is not needed, for S3 compatible object stores set the domain on which the object store is available.
 * `S3_USE_V2_AUTH`: use Signature Version 2 Signing Process, this is useful for connecting to S3 compatible object stores like Riak-CS, or Ceph.
-* `S3_ENCRYPTION_KEYS`: a [JSON string](example-s3-encryption-keys.json) containing a list of keys which can be used to encrypt and decrypt data at rest in S3.
 * `S3_USE_SSE`: if set to `true` this will enable Server Side Encryption in S3, available from Mendix 6.0
 
 
 ### Configuring the Java heap size
 
-The default java heap size is set to the total available memory divided by two. If your application's memory limit is 1024M, the heap size is set to 512M. You might want to tweak this to your needs by using another environment variable in which case it is used directly.
+The Java heap size is configured automatically based on best practices. You can tweak this to your needs by using another environment variable in which case it is used directly.
 
     cf set-env <YOUR_APP> HEAP_SIZE 512M
 
@@ -128,7 +135,7 @@ The default Java version is 8 for Mendix 5.18 and higher. If you want to force J
 
 ### Configuring Custom Runtime Settings
 
-To configure any of the advanced [Custom Runtime Settings](https://world.mendix.com/display/refguide6/Custom+Settings) you can use setting name prefixed with `MXRUNTIME_` as an environment variable.
+To configure any of the advanced [Custom Runtime Settings](https://docs.mendix.com/refguide/custom-settings) you can use setting name prefixed with `MXRUNTIME_` as an environment variable.
 
 For example, to configure the `ConnectionPoolingMinIdle` setting to value `10`, you can set the following environment variable:
 
@@ -137,6 +144,17 @@ For example, to configure the `ConnectionPoolingMinIdle` setting to value `10`, 
 If the setting contains a dot `.` you can use an underscore `_` in the environment variable. So to set `com.mendix.storage.s3.EndPoint` to `foo` you can use:
 
     cf set-env <YOUR_APP> MXRUNTIME_com_mendix_storage_s3_EndPoint foo
+
+
+### Configuring HTTP headers
+
+To prevent clickjacking, the `X-Frame-Options` header can be configured. See [this Mozilla page](https://developer.mozilla.org/en-US/docs/Web/HTTP/Headers/X-Frame-Options) for all supported options. This can be configured via het `X_FRAME_OPTIONS` environment variable. For example:
+
+    cf set-env <YOUR_APP> X_FRAME_OPTIONS SAMEORIGIN
+
+or:
+
+    cf set-env <YOUR_APP> X_FRAME_OPTIONS "ALLOW-FROM https://example.com/"
 
 
 ### Horizontal Scaling
@@ -173,13 +191,13 @@ If you are running Cloud Foundry without a connection to the Internet, you shoul
 
 `BLOBSTORE: https://my-intranet-webserver.my-company.com/mendix/`
 
-The preferred way to set up this on-premises web server is as a transparant proxy to `https://cdn.mendix.com/`. This prevents manual work by system administrators every time a new Mendix version is released.
+The preferred way to set up this on-premises web server is as a transparent proxy to `https://cdn.mendix.com/`. This prevents manual work by system administrators every time a new Mendix version is released.
 
 Alternatively you can make the required mendix runtime files `mendix-VERSION.tar.gz` available under `BLOBSTORE/runtime/`. The original files can be downloaded from `https://cdn.mendix.com/`. You should also make the Java version available on:
 * `BLOBSTORE/mx-buildpack/jre-8-linux-x64.tar.gz`
 * `BLOBSTORE/mx-buildpack/jdk-8-linux-x64.tar.gz`
 
-And for [Mendix < 6.6](https://docs.mendix.com/releasenotes/desktop-modeler/6.6#fixes):
+And for [Mendix \< 6.6](https://docs.mendix.com/releasenotes/desktop-modeler/6.6#fixes):
 * `BLOBSTORE/mx-buildpack/jre-8u51-linux-x64.tar.gz`
 * `BLOBSTORE/mx-buildpack/jdk-8u51-linux-x64.tar.gz`
 
@@ -279,7 +297,7 @@ To enable AppDynamics, configure the following environment variables:
 
 \* The `APPDYNAMICS_AGENT_NODE_NAME` environment variable will be appended with the value of the `CF_INSTANCE_ID` variable. If you use `my-app` for `APPDYNAMICS_AGENT_NODE_NAME`, the AppDynamics agent will be configured as `my-app-0` for instance `0` and `my-app-1` for instance `1`, etc.
 
-If you have any environment variable that starts with `APPDYNAMICS_`, the AppDynamics Java Agent will be configured for your application. At the moment only agent version 4.1.7.1 is available. After configuring these environment variables, restage your app for the agent to be enabled.
+If you have any environment variable that starts with `APPDYNAMICS_`, the AppDynamics Java Agent will be configured for your application. At the moment only agent version 4.3.5.7 is available. After configuring these environment variables, restage your app for the agent to be enabled.
 
 Please note that AppDynamics requires Mendix 6.2 or higher.
 
@@ -328,10 +346,58 @@ Example:
 
     cf set-env <YOUR_APP> LOGGING_CONFIG '{ "<LOG NODE VALUE>": "DEBUG"}'
 
+### Rate-limiting of log output
+
+The buildpack has the ability to rate-limit the amount of log lines from the Mendix Runtime. This can be useful for apps that misbehave and cause problems for other users in a multi-tenant environment. Rate-limiting is done in log lines per second. Extra lines are dropped and the number of dropped messages is printed on `stderr`.
+
+Example (1000 loglines/second):
+
+    cf set-env <YOUR_APP> LOG_RATELIMIT '1000'
 
 ### Enabling the Mendix Debugger
 
 You can enable the Mendix Debugger by setting a `DEBUGGER_PASSWORD` environment variable. This will enable and open up the debugger for the lifetime of this process and is to be used with caution. The debugger is reachable on https://DOMAIN/debugger/. You can follow the second half of this [How To](https://docs.mendix.com/howto/monitoring-troubleshooting/debug-microflows) to connect with the Mendix Business Modeler. To stop the debugger, unset the environment variable and restart the application.
+
+
+Buildpack Version Pinning
+====
+
+If you use the `cf push` commands as described above, you will always use the latest version of the buildpack, i.e. the most recent commit to the master branch. We recommend this for the majority of use cases, as you will always have the latest features and fixes.
+
+However, if you need to exercise a high degree of control over your deployments, it is possible to pin a specific version of the buildpack. This will prevent you from being affected by bugs that are inadvertently introduced, but you will need to set up a procedure to regularly move to new versions of the buildpack.
+
+To push with a specific version of the buildpack, append `#<tag>` to the buildpack URL in your `cf push` command like so:
+
+    cf push <YOUR_APP> -b https://github.com/mendix/cf-mendix-buildpack#v1.9.2 -p <YOUR_MDA>.mda -t 180
+
+You can find the list of available tags here: https://github.com/mendix/cf-mendix-buildpack/tags
+
+
+Troubleshooting (Rescue mode)
+====
+
+Sometimes the app won't run because it exits with status code 143. Or, for any reason, the app is unable to start, leaving you unable to debug the issue from within the container. For these cases we have introduced a `DEBUG_CONTAINER` mode. To enable it:
+
+```
+cf set-env <YOUR_APP> DEBUG_CONTAINER true
+cf restart <YOUR_APP>
+```
+
+Now your app will start in CloudFoundry (n.b. - the Mendix Runtime will not start yet) and you can troubleshoot the problem with:
+```
+cf ssh <YOUR_APP>
+export HOME=$HOME/app # this should not be needed but for now it is
+export DEBUG_CONTAINER=false # while we are in the container turn it off, we could try to make this optional by detecting other environment variables that are present over ssh but not regular start
+export PORT=1234 # so that nginx can start correctly
+cd app
+python3 start.py
+```
+
+After you are done, you can disable debug mode with:
+```
+cf unset-env <YOUR_APP> DEBUG_CONTAINER
+cf restart <YOUR_APP>
+```
 
 
 Contributing
@@ -342,3 +408,8 @@ Make sure your code complies with pep8 and that no pyflakes errors/warnings are 
 Rebase your git history in such a way that each commit makes one consistent change. Don't include separate "fixup" commits later on.
 
 For new code changes going live, the version has to bumped at the top of `start.py`, and a new tag with that version number needs to be pushed to github.
+
+License
+====
+
+This project is licensed under the Apache License v2 (for details, see the [LICENSE](LICENSE) file).

@@ -8,13 +8,13 @@ import codecs
 import time
 import copy
 
-from config import M2EEConfig
-from client import M2EEClient
-from runner import M2EERunner
-from log import logger
+from .config import M2EEConfig
+from .client import M2EEClient
+from .runner import M2EERunner
+from .log import logger
 
-import util
-import client_errno
+from . import util
+from . import client_errno
 
 
 class M2EE():
@@ -265,6 +265,7 @@ class M2EE():
                 config[option] = ','.join(config[option])
 
         logger.debug("Sending MxRuntime configuration...")
+        logger.debug(str(config))
         m2eeresponse = self.client.update_configuration(config)
         result = m2eeresponse.get_result()
         if result == 1:
